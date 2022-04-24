@@ -1,0 +1,95 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "request": "launch",
+            "name": "Login",
+            "type": "pwa-node",
+            "program": "${workspaceFolder}/cli.ts",
+            "args": [
+                "login",
+                "--account",
+                "user@domain.tld"
+            ],
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "deno",
+            "runtimeArgs": [
+                "run",
+                "--inspect",
+                "--unstable",
+                "--allow-env",
+                "--allow-read",
+                "--allow-write",
+                "--allow-net=smartapi.vesync.com"
+            ],
+            "attachSimplePort": 9229
+        },
+        {
+            "request": "launch",
+            "name": "Get Devices",
+            "type": "pwa-node",
+            "program": "${workspaceFolder}/cli.ts",
+            "args": [
+                "devices"
+            ],
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "deno",
+            "runtimeArgs": [
+                "run",
+                "--inspect",
+                "--unstable",
+                "--allow-env",
+                "--allow-read",
+                "--allow-write",
+                "--allow-net=smartapi.vesync.com"
+            ],
+            "attachSimplePort": 9229
+        },
+        {
+            "request": "launch",
+            "name": "Update Device Status On",
+            "type": "pwa-node",
+            "program": "${workspaceFolder}/cli.ts",
+            "args": [
+                "on",
+                "--device",
+                "MY_DEVICE_NAME"
+            ],
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "deno",
+            "runtimeArgs": [
+                "run",
+                "--inspect",
+                "--unstable",
+                "--allow-env",
+                "--allow-read",
+                "--allow-write",
+                "--allow-net=smartapi.vesync.com"
+            ],
+            "attachSimplePort": 9229
+        },
+        {
+            "request": "launch",
+            "name": "Update Device Status Off",
+            "type": "pwa-node",
+            "program": "${workspaceFolder}/cli.ts",
+            "args": [
+                "off",
+                "--device",
+                "MY_DEVICE_NAME"
+            ],
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "deno",
+            "runtimeArgs": [
+                "run",
+                "--inspect",
+                "--unstable",
+                "--allow-env",
+                "--allow-read",
+                "--allow-write",
+                "--allow-net=smartapi.vesync.com"
+            ],
+            "attachSimplePort": 9229
+        }
+    ]
+}
