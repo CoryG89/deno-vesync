@@ -1,3 +1,5 @@
+/// <reference types="./types/vesync.d.ts" />
+
 import { parse, crypto, ensureDir } from './deps.ts';
 import { promptSecret } from './helpers/prompt-secret.ts';
 import { login, devices, status } from './mod.ts';
