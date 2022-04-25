@@ -5,12 +5,7 @@ import { promptSecret } from './helpers/prompt-secret.ts';
 import { login, devices, status } from './mod.ts';
 
 const [command, ...restArgs] = Deno.args;
-const args = parse(restArgs, {
-    alias: {
-        account: 'a',
-        device: 'd'
-    }
-});
+const args = parse(restArgs, { string: ['account', 'device', 'value'] });
 
 const cacheDir = Deno.env.get('XDG_CACHE_HOME') || `${Deno.env.get('HOME') || '~'}/.cache`;
 const moduleCacheDir = `${cacheDir}/deno-vesync`;
@@ -33,11 +28,13 @@ async function writeConfig(config: { account: string, password: string, devices?
     const encodedConfig = encoder.encode(JSON.stringify(config));
     await ensureDir(moduleCacheDir);
     await Deno.writeFile(moduleCacheFile, encodedConfig);
-    console.log(`Configuration successfully cached at ${moduleCacheFile}`);
 }
 
 if (/^login$/i.test(command)) {
     const { account } = args;
+    if (!account) {
+        console.error('Must pass arg --account with VeSync account email');
+    }
     const password = await promptSecret('Please enter your password: ');
 
     const encodedPassword = encoder.encode(password);
@@ -49,44 +46,58 @@ if (/^login$/i.test(command)) {
     const res = await login(account, hash);
     const { accountID, tk } = await res.json();
     if (!accountID || !tk || typeof accountID !== 'string' || typeof tk !== 'string') {
-        console.error('Could not get account id and token from VeSync API');
+        console.error(`Could not get account id/token from VeSync API for account ${account}`);
         Deno.exit(1);
     }
 
     writeConfig({ account, password: hash });
 } else if (/^devices$/i.test(command)) {
-    const { account, password } = await readConfig();
+    const config = await readConfig();
+    const { account, password } = config;
     const loginResponse = await login(account, password);
     const { accountID, tk } = await loginResponse.json();
     const res = await devices(accountID, tk);
-    const devicesList = await res.json();
-    console.log('Got devices:', devicesList);
+    config.devices = await res.json();
+    console.log(config.devices);
 
-    writeConfig({ account, password, devices: devicesList });
-} else if (/^(on|off)$/i.test(command)) {
-    if (!args.device) {
-        console.error('Must pass arg --device with device name');
+    writeConfig(config);
+    console.log(`Device configuration saved to local cache: ${moduleCacheFile}`);
+} else if (/^(status)$/i.test(command)) {
+    const { device, value } = args;
+    if (!device) {
+        console.error('Must pass arg --device with VeSync device name');
         Deno.exit(1);
     }
-    const { account, password, ...restConfig } = await readConfig();
-    let { devices: devicesList } = restConfig;
-    const loginResponse = await login(account, password);
-    const { accountID, tk } = await loginResponse.json();
-
-    if (!devicesList) {
-        const res = await devices(accountID, tk);
-        devicesList = await res.json();
+    if (!value || !/^(on|off)$/.test(value.toLowerCase())) {
+        console.error('Must pass arg --value as one of \'on\' or \'off\'');
+        Deno.exit(1);
     }
+    const config = await readConfig();
+    const { account, password } = config;
+    const { accountID, tk } = await (await login(account, password)).json();
 
-    const { cid: deviceId, deviceType } = devicesList && devicesList.find(({ deviceName } : Device) => deviceName === args.device);
+    let { cid: deviceId, deviceType } = config.devices && config.devices.find(({ deviceName } : Device) => deviceName === device);
     if (!deviceId || !deviceType || typeof deviceId !== 'string' || typeof deviceType !== 'string') {
-        console.error(`Could not get device id or device type for device ${args.device}`);
-        Deno.exit(1);
+        const res = await devices(accountID, tk);
+        config.devices = await res.json();
+
+        writeConfig(config);
+        console.log(`Device configuration saved to local cache: ${moduleCacheFile}`);
+        
+        ({ cid: deviceId, deviceType } = config.devices && config.devices.find(({ deviceName } : Device) => deviceName === device));
+        if (!deviceId || !deviceType || typeof deviceId !== 'string' || typeof deviceType !== 'string') {
+            console.error(`Could not get device id/type from VeSync API for device ${device}`);
+            Deno.exit(1);
+        }    
     }
 
-    const res = await status(accountID, tk, deviceType, deviceId, command.toLowerCase());
+    const deviceStatus = value.toLowerCase();
+    const res = await status(accountID, tk, deviceType, deviceId, deviceStatus);
     if (res.ok) {
-        console.log('Device status updated successfully');
+        console.log(`Successfully updated device ${device} (${deviceId}) with new status: ${deviceStatus}`);
+    } else {
+        console.error(`Failed to update ${device} (${deviceId}) with new status: ${deviceStatus}`);
+        Deno.exit(1);
     }
 }
 

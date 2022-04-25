@@ -1,4 +1,3 @@
-
 interface Device {
     deviceName: string,
     deviceImg: string,
