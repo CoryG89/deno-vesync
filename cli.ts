@@ -24,10 +24,11 @@ async function readConfig() {
     return config;
 }
 
-async function writeConfig(config: { account: string, password: string, devices?: Array<Device>}) {
-    const encodedConfig = encoder.encode(JSON.stringify(config));
-    await ensureDir(moduleCacheDir);
-    await Deno.writeFile(moduleCacheFile, encodedConfig);
+function writeConfig(config: { account: string, password: string, devices?: Array<Device>}) {
+    const configString = JSON.stringify(config, null, 4);
+    console.log(configString);
+    return ensureDir(moduleCacheDir)
+        .then(() => Deno.writeFile(moduleCacheFile, encoder.encode(configString)));
 }
 
 if (/^login$/i.test(command)) {
@@ -50,7 +51,8 @@ if (/^login$/i.test(command)) {
         Deno.exit(1);
     }
 
-    writeConfig({ account, password: hash });
+    await writeConfig({ account, password: hash });
+    await Deno.stderr.write(encoder.encode(`Login config successfully saved to local cache: ${moduleCacheFile}`));
 } else if (/^devices$/i.test(command)) {
     const config = await readConfig();
     const { account, password } = config;
@@ -58,10 +60,8 @@ if (/^login$/i.test(command)) {
     const { accountID, tk } = await loginResponse.json();
     const res = await devices(accountID, tk);
     config.devices = await res.json();
-    console.log(config.devices);
-
-    writeConfig(config);
-    console.log(`Device configuration saved to local cache: ${moduleCacheFile}`);
+    await writeConfig(config);
+    await Deno.stderr.write(encoder.encode(`Device config successfully saved to local cache: ${moduleCacheFile}`));
 } else if (/^(status)$/i.test(command)) {
     const { device, value } = args;
     if (!device) {
@@ -80,9 +80,8 @@ if (/^login$/i.test(command)) {
     if (!deviceId || !deviceType || typeof deviceId !== 'string' || typeof deviceType !== 'string') {
         const res = await devices(accountID, tk);
         config.devices = await res.json();
-
-        writeConfig(config);
-        console.log(`Device configuration saved to local cache: ${moduleCacheFile}`);
+        await writeConfig(config);
+        await Deno.stderr.write(encoder.encode(`Device config successfully saved to local cache: ${moduleCacheFile}`));
         
         ({ cid: deviceId, deviceType } = config.devices && config.devices.find(({ deviceName } : Device) => deviceName === device));
         if (!deviceId || !deviceType || typeof deviceId !== 'string' || typeof deviceType !== 'string') {
@@ -94,7 +93,7 @@ if (/^login$/i.test(command)) {
     const deviceStatus = value.toLowerCase();
     const res = await status(accountID, tk, deviceType, deviceId, deviceStatus);
     if (res.ok) {
-        console.log(`Successfully updated device ${device} (${deviceId}) with new status: ${deviceStatus}`);
+        await Deno.stderr.write(encoder.encode(`Successfully updated device ${device} (${deviceId}) with new status: ${deviceStatus}`));
     } else {
         console.error(`Failed to update ${device} (${deviceId}) with new status: ${deviceStatus}`);
         Deno.exit(1);
