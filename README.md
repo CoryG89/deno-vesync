@@ -7,7 +7,7 @@ API module and CLI tool for interacting with Vesync based WiFi outlets, written 
 First install the only dependency [Deno](https://deno.land) and then run the following to install the CLI:
 
 ```sh
-deno install --unstable --allow-env --allow-read --allow-write --allow-net='smartapi.vesync.com' 'https://deno.land/x/vesync@0.0.5/cli.ts'
+deno install --allow-env --allow-read --allow-write --allow-net='smartapi.vesync.com' 'https://deno.land/x/vesync@0.0.6/cli.ts'
 ```
 
 ## Usage
