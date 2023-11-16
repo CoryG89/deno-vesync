@@ -4,7 +4,7 @@
         {
             "request": "launch",
             "name": "Login",
-            "type": "pwa-node",
+            "type": "node",
             "program": "${workspaceFolder}/cli.ts",
             "args": [
                 "login",
@@ -27,7 +27,7 @@
         {
             "request": "launch",
             "name": "Get Devices",
-            "type": "pwa-node",
+            "type": "node",
             "program": "${workspaceFolder}/cli.ts",
             "args": [
                 "devices"
@@ -48,7 +48,7 @@
         {
             "request": "launch",
             "name": "Update Device Status On",
-            "type": "pwa-node",
+            "type": "node",
             "program": "${workspaceFolder}/cli.ts",
             "args": [
                 "on",
@@ -71,7 +71,7 @@
         {
             "request": "launch",
             "name": "Update Device Status Off",
-            "type": "pwa-node",
+            "type": "node",
             "program": "${workspaceFolder}/cli.ts",
             "args": [
                 "off",
