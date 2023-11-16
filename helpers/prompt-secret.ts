@@ -1,7 +1,7 @@
 export async function promptSecret(message : string) : Promise<string> {
     const encoder = new TextEncoder();
 	Deno.stdout.write(encoder.encode(message));
-	Deno.setRaw(0, true);
+	Deno.stdin.setRaw(true);
 
 	let input = '';
 	while (true) {
@@ -12,13 +12,13 @@ export async function promptSecret(message : string) : Promise<string> {
 			switch (char) {
 				case '\u0003':
 				case '\u0004': {
-					Deno.setRaw(Deno.stdin.rid, false);
+					Deno.stdin.setRaw(false);
                     Deno.stdout.write(encoder.encode('\n'));
 					throw new Error('Could not get secret from prompt');
                 }
 				case '\r':
 				case '\n': {
-					Deno.setRaw(Deno.stdin.rid, false);
+					Deno.stdin.setRaw(false);
                     Deno.stdout.write(encoder.encode('\n'));
 					return input;
                 }
